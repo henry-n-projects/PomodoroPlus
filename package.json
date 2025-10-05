@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth": "^2.0.0",
+    "session": "^0.1.0",
+    "typescript": "^5.9.3"
+  }
+}
