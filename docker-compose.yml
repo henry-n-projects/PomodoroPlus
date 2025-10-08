@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pomodoro_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
+
+# To run the PostgreSQL container, use the command:
+# docker-compose up -d
+# This will start the PostgreSQL server in detached mode.
+# You can then connect to the database using a PostgreSQL client with the following credentials:
+# Host: localhost
+# Port: 5432
+# User: user
+# Password: password
+# Database: pomodoro_db
+
+# To stop the container, use the command:
+# docker-compose down
+# This will stop and remove the PostgreSQL container. 
+# The database data will be persisted in the named volume 'db_data'.
+# Make sure you have Docker and Docker Compose installed on your machine before running the commands.
+# This configuration sets up a PostgreSQL database server with a named volume for data persistence.
+

@@ -1,0 +1,17 @@
+Run the Dockerized Postgres (DEV)
+
+Prerequisites:
+- Docker installed on your machine.
+- Docker Compose installed on your machine.
+
+Start:
+#From the directory containing the docker-compose.yml file, run:
+docker-compose up -d
+#This command will start the PostgreSQL server in detached mode.
+
+docker compose ps
+#This command will show the running containers.
+
+docker compose logs -f db
+#This command will show the logs of the PostgreSQL container.
+
