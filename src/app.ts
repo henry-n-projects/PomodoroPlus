@@ -1,6 +1,6 @@
-import express = require('express');
-import cookieParser = require('cookie-parser');
-import dotenv = require('dotenv');
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
 
 const session = require('express-session');
 const PgFactory= require('connect-pg-simple')
@@ -46,7 +46,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 //6. Export app
-export = app;
+export default app;
 
 
 

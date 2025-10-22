@@ -18,5 +18,11 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "prisma": "^6.17.1",
     "typescript": "^5.9.3"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
   }
+  
 }

@@ -1,5 +1,5 @@
-import app = require('./app');
-import dotenv = require('dotenv');
+import app from './app.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
