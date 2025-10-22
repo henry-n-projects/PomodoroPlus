@@ -1,14 +1,22 @@
 {
   "dependencies": {
     "@prisma/client": "^6.17.1",
+    "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "passport": "^0.7.0",
-    "passport-google-oauth": "^2.0.0",
-    "session": "^0.1.0",
-    "typescript": "^5.9.3"
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "prisma": "^6.17.1"
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^24.7.2",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "prisma": "^6.17.1",
+    "typescript": "^5.9.3"
   }
 }
