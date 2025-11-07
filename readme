@@ -15,3 +15,6 @@ docker compose ps
 docker compose logs -f db
 #This command will show the logs of the PostgreSQL container.
 
+docker-compose down
+#This command will shut down the Pg container
+
