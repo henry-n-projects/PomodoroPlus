@@ -8,6 +8,7 @@ import connectPgSimple from "connect-pg-simple";
 import { configureSession } from "./config/session.js";
 import { configurePassport } from "./config/passport.js";
 import routes from "./routes/index.js";
+import { errorHandler } from "./middleware/error_middleware.js";
 
 const PgSession = connectPgSimple(session);
 
@@ -25,8 +26,10 @@ app.use(configureSession());
 
 //5. Initialize passport
 configurePassport();
+
 //6. passport middleware -> attach helper functions to req
 app.use(passport.initialize());
+
 //7. passport middleware session -> on every req calls deserializeUser
 app.use(passport.session());
 
@@ -35,20 +38,17 @@ app.get("/", (req: express.Request, res: express.Response) => {
   res.send("Express app is running");
 });
 
-// mount all routes
+//9. mount all routes
 app.use("/api", routes);
 
-//9. Error handling middleware for middlewares
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    console.error(err.stack);
-    res.status(500).send("Something broke!");
-  }
-);
+//10. Error handling middleware for middlewares
+app.use(errorHandler);
 
+//11. unmatched routes
+app.use((req: express.Request, res: express.Response) => {
+  res.status(404).json({
+    status: "error",
+    message: "Route not found",
+  });
+});
 export default app;

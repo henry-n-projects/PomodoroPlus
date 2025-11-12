@@ -19,6 +19,7 @@ export const configureSession = () => {
     store: new PgSession({
       conString: process.env.DATABASE_URL,
       tableName: "session",
+      createTableIfMissing: true,
       // Clean up expired sessions
       pruneSessionInterval: 60 * 15, // 15 minutes
     }),
