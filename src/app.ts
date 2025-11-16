@@ -9,11 +9,20 @@ import { configureSession } from "./config/session.js";
 import { configurePassport } from "./config/passport.js";
 import routes from "./routes/index.js";
 import { errorHandler } from "./middleware/error_middleware.js";
+import cors from "cors";
 
 const PgSession = connectPgSimple(session);
 
-//1. Create express app instance
+//0. Create express app instance
 const app = express();
+
+// 1. Cors to allow frontend to talk to backend
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 //2. Middleware to parse JSON bodies
 app.use(express.json());
@@ -51,4 +60,5 @@ app.use((req: express.Request, res: express.Response) => {
     message: "Route not found",
   });
 });
+
 export default app;
