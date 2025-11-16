@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import authRoutes from "./auth_routes.js";
 
 const router = Router();
 
-router.get("/health", (req, res) => {
+router.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });
 });
 

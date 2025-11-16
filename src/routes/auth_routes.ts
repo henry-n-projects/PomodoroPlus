@@ -1,6 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
-
+import type { UserObject } from "../types/api.js";
 const router = Router();
 
 // Google login -> displays google login and request profile+email
@@ -14,7 +14,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "/login",
-    successRedirect: "/",
+    successRedirect: "/", // change
   })
 );
 
@@ -29,9 +29,13 @@ router.post("/logout", (req, res, next) => {
 // Get current User
 router.get("/me", (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res
+      .status(401)
+      .json({ status: "error", message: "Not authenticated" });
   }
-  res.json(req.user);
+  const user = req.user as UserObject;
+
+  res.json(user);
 });
 
 export default router;
