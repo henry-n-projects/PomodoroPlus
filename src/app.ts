@@ -8,7 +8,7 @@ import connectPgSimple from "connect-pg-simple";
 import { configureSession } from "./config/session.js";
 import { configurePassport } from "./config/passport.js";
 import routes from "./routes/index.js";
-import { errorHandler } from "./middleware/error_middleware.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 import cors from "cors";
 
 const PgSession = connectPgSimple(session);

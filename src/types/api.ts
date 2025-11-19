@@ -8,3 +8,11 @@ export interface UserObject {
   timezone: string;
   settings: Prisma.JsonValue;
 }
+
+export interface CreateSessionBody {
+  start_at: string;
+  end_at: string;
+  break_time: number;
+  completed: boolean;
+  tag_id: string;
+}

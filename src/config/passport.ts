@@ -26,7 +26,7 @@ export const configurePassport = () => {
     }
 
     // On new requests the cookie is sent from client with session ID
-    // We receive and look up the userID that matches the ID from the session
+    // We receive and look up the sessionID that matches and rebuild user
   });
 
   // Setup google oAuth strategy
