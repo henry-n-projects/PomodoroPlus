@@ -16,3 +16,14 @@ export interface CreateSessionBody {
   completed: boolean;
   tag_id: string;
 }
+
+export interface SessionObject {
+  id: string;
+  user_id: string;
+  start_at: string;
+  end_at: string;
+  break_time: number;
+  completed: boolean;
+  created_at: string;
+  tag_id: string;
+}

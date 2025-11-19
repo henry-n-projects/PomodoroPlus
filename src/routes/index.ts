@@ -8,5 +8,5 @@ router.get("/health", (req: Request, res: Response) => {
 });
 
 router.use("/auth", authRoutes);
-router.use("/session", sessionRoutes);
+router.use("/sessions", sessionRoutes);
 export default router;
