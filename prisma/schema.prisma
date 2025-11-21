@@ -7,7 +7,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,28 +14,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+//Enums
+//
+ 
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BreakType {
+  SHORT 
+  LONG 
+  CUSTOM
+}
+
+//
+//Models
+//
+
 model User {
   id String @id @default(uuid())  
   auth_user_id String @unique
   name String 
-  avartar_url String?
+  avatar_url String?
   timezone String 
-  settings Json
+  settings Json @default("{}")
 
   //Relations 
   sessions Session[]
   tags Tag[]
-  tasks Task[]
 }
 
 model Session {
   id String @id @default(uuid())
   user_id String
+  name String?
   start_at DateTime 
-  end_at DateTime
-  break_time Int
-  completed Boolean
-  created_at DateTime
+  end_at DateTime?
+  break_time Int @default(0)
+  status SessionStatus @default(SCHEDULED)
+  created_at DateTime @default(now())
   tag_id String 
 
   //Relations 
@@ -53,6 +73,8 @@ model Tag {
   color String
   created_at DateTime
 
+  // Prevent duplicates
+  @@unique([user_id, name])
   //Relations 
   sessions Session[]
   user User @relation(fields: [user_id], references: [id])
@@ -62,31 +84,20 @@ model Distraction {
   id String @id @default(uuid())
   session_id String 
   name String
-  occured_at DateTime
-  created_at DateTime
+  occured_at DateTime @default(now())
+  created_at DateTime @default(now())
 
   //Relations
   session Session @relation(fields: [session_id], references: [id])
 }
 
-model Task {
-  id String @id @default(uuid())
-  user_id String
-  name String 
-  status String
-  created_at DateTime
-  updated_at DateTime
-
-  //Relations
-  user User @relation(fields: [user_id], references: [id])
-}
 
 model Break {
   id String @id @default(uuid())
   session_id String
   type String
   start_time DateTime
-  end_time DateTime
+  end_time DateTime?
 
   //Relations
   session Session @relation(fields: [session_id], references: [id])

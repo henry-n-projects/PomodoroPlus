@@ -7,6 +7,7 @@ import {
 } from "express";
 import { AppError } from "../utils/AppError.js";
 import type { CreateSessionBody, SessionObject } from "../types/api.js";
+import type { Session, SessionStatus } from "@prisma/client";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -31,7 +32,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body as CreateSessionBody;
 
     // 3. Validate response from client
-    if (!body.end_at || !body.start_at || !body.tag_id) {
+    if (!body.end_at || !body.start_at || !body.tag_id || !body.name) {
       return res.status(400).json({
         status: "error",
         message: "start_at, end_at or tag_id missing.",
@@ -39,11 +40,11 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Turns valid date strings into numbers
-    const startTime = new Date(body.start_at);
-    const endTime = new Date(body.end_at);
+    const startAt = new Date(body.start_at);
+    const endAt = new Date(body.end_at);
 
     // Check if time strings are actual numbers
-    if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+    if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
       return res.status(400).json({
         status: "error",
         message: "start_at or end_at invalid date.",
@@ -51,13 +52,14 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // 4. Create session into sessions table
-    const session = await prisma.session.create({
+    const created = await prisma.session.create({
       data: {
         user_id: user.id,
-        start_at: startTime,
-        end_at: endTime,
-        break_time: body.break_time ?? 0,
-        completed: body.completed ?? false,
+        name: body.name ?? "",
+        start_at: startAt,
+        end_at: endAt ?? null,
+        break_time: body.break_time,
+        status: body.status as SessionStatus,
         created_at: new Date(),
         tag_id: body.tag_id,
       },
@@ -65,7 +67,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
     return res.status(201).json({
       status: "success",
-      data: { session },
+      data: { session: created },
     });
   } catch (err) {
     next(err);
@@ -82,7 +84,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   }
   try {
     // 2. Find sessions in DB for user
-    const sessions = await prisma.session.findMany({
+    const result = await prisma.session.findMany({
       where: {
         user_id: user.id,
       },
@@ -92,20 +94,22 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     });
 
     // 3. Map prisma result into session object
-    const result: SessionObject[] = sessions.map((session) => ({
+    const sessions: SessionObject[] = result.map((session: Session) => ({
       id: session.id,
       user_id: session.user_id,
+      name: session.name ?? "",
       start_at: session.start_at.toISOString(),
-      end_at: session.end_at.toISOString(),
+      end_at: session.end_at?.toISOString() ?? "",
       break_time: session.break_time,
-      completed: session.completed,
+      status: session.status,
       created_at: session.created_at.toISOString(),
       tag_id: session.tag_id,
     }));
 
+    // 4. Return data to client
     return res.status(200).json({
       status: "success",
-      data: { result },
+      sessions,
     });
   } catch (err) {
     next(err);
