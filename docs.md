@@ -99,10 +99,6 @@ Body:
       {
         "date": "2025-11-17",
         "focus_minutes": 90
-      },
-      {
-        "date": "2025-11-18",
-        "focus_minutes": 120
       }
     ],
     "today": {
@@ -119,19 +115,6 @@ Body:
             "id": "randomstring",
             "name": "Deep Work",
             "color": "#FF5A5A"
-          }
-        },
-        {
-          "id": "randomstring",
-          "name": "Study Session",
-          "start_at": "2025-11-21T14:00:00.000Z",
-          "end_at": null,
-          "status": "SCHEDULED",
-          "break_time": 0,
-          "tag": {
-            "id": "randomstring",
-            "name": "Uni",
-            "color": "#4A90E2"
           }
         }
       ]
