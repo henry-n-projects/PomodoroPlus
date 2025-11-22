@@ -10,7 +10,6 @@ export interface UserObject {
   settings: Prisma.JsonValue;
 }
 
-//todo: match it to prisma model
 export interface CreateSessionBody {
   name: string;
   start_at: string;
@@ -30,4 +29,12 @@ export interface SessionObject {
   status: SessionStatus;
   created_at: string;
   tag_id: string;
+}
+
+export interface TagObject {
+  id: string;
+  name: string;
+  created_at: Date;
+  user_id: string;
+  color: string;
 }

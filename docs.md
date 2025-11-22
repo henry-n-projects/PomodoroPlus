@@ -52,7 +52,7 @@ GET /api/auth/me
 Purpose: Get the currently logged-in user
 Auth: Session cookie required (connect.sid)
 Success 200
-
+Body:
 {
   "id": "string-uuid",
   "auth_user_id": "google-profile-id",
@@ -74,5 +74,70 @@ Purpose: Log out the current user
 Auth: Session cookie required
 Success 200
 Behaviour: Redirects to /
+
+- Dashboard
+GET /api/dashboard
+Purpose: Get current user's dashboard info
+Auth: Session cookie required (connect.sid)
+Success: 200
+Body:
+{
+  "status": "success",
+  "data": {
+    "user": {
+      "id": "longstring",
+      "name": "Steve jobs",
+      "avatar_url": "https://example.com/avatar.png",
+      "timezone": "Australia/Melbourne",
+      "settings": {}
+    },
+    "week_progress": {
+      "scheduled_count": 6,
+      "completed_count": 4
+    },
+    "weekly_activities": [
+      {
+        "date": "2025-11-17",
+        "focus_minutes": 90
+      },
+      {
+        "date": "2025-11-18",
+        "focus_minutes": 120
+      }
+    ],
+    "today": {
+      "date": "2025-11-21T00:00:00.000Z",
+      "sessions": [
+        {
+          "id": "randomstring",
+          "name": "Morning Deep Work",
+          "start_at": "2025-11-21T09:00:00.000Z",
+          "end_at": null,
+          "status": "SCHEDULED",
+          "break_time": 0,
+          "tag": {
+            "id": "randomstring",
+            "name": "Deep Work",
+            "color": "#FF5A5A"
+          }
+        },
+        {
+          "id": "randomstring",
+          "name": "Study Session",
+          "start_at": "2025-11-21T14:00:00.000Z",
+          "end_at": null,
+          "status": "SCHEDULED",
+          "break_time": 0,
+          "tag": {
+            "id": "randomstring",
+            "name": "Uni",
+            "color": "#4A90E2"
+          }
+        }
+      ]
+    }
+  }
+}
+
 
 ```

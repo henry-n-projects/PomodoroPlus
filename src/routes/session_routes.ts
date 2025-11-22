@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../libs/prisma.js";
 import {
   Router,
   type NextFunction,
@@ -10,7 +10,6 @@ import type { CreateSessionBody, SessionObject } from "../types/api.js";
 import type { Session, SessionStatus } from "@prisma/client";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 interface AuthRequest extends Request {
   user?: {
@@ -67,7 +66,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
     return res.status(201).json({
       status: "success",
-      data: { session: created },
+      data: created,
     });
   } catch (err) {
     next(err);
@@ -83,7 +82,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     return next(new AppError(401, "Not Authenticated", true));
   }
   try {
-    // 2. Find sessions in DB for user
+    // 2. Find sessions in DB
     const result = await prisma.session.findMany({
       where: {
         user_id: user.id,

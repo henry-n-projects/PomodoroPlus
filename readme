@@ -1,6 +1,7 @@
 Run the Dockerized Postgres (DEV)
 
 Prerequisites:
+
 - Docker installed on your machine.
 - Docker Compose installed on your machine.
 
@@ -18,3 +19,4 @@ docker compose logs -f db
 docker-compose down
 #This command will shut down the Pg container
 
+//todo env setup google postgres etc

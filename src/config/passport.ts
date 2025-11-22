@@ -50,7 +50,7 @@ export const configurePassport = () => {
               data: {
                 auth_user_id: profile.id,
                 name: profile.displayName,
-                avartar_url: profile.photos?.[0]?.value ?? null,
+                avatar_url: profile.photos?.[0]?.value ?? null,
                 timezone: "UTC",
                 settings: {} as Prisma.JsonObject,
               },
