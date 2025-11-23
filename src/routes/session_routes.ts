@@ -6,13 +6,10 @@ import {
   type Request,
 } from "express";
 import { AppError } from "../utils/AppError.js";
-import type {
-  CreateSessionBody,
-  SessionObject,
-  UserObject,
-} from "../types/api.js";
+import type { CreateSessionBody, UserObject } from "../types/api.js";
 import { SessionStatus, type Session } from "@prisma/client";
 import { error } from "console";
+import { appendFile } from "fs";
 
 const router = Router();
 
@@ -76,7 +73,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-//GET schduled sessions to start from
+//GET scheduled sessions to start from
 router.get(
   "/scheduled",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -147,9 +144,8 @@ router.post(
       return next(new AppError(401, "Not authenticated", true));
     }
 
-    // 2. Fetch and update session
     try {
-      // Extract session id from url
+      // 2. Extract session id from url
       const id = req.params.id;
 
       if (!id) {
@@ -158,7 +154,7 @@ router.post(
 
       const now = new Date();
 
-      // Fetch scheduled session and validate session belongs to user
+      // 3. Fetch scheduled session and validate session belongs to user
       const session = await prisma.session.findFirst({
         where: {
           id: id,
@@ -170,12 +166,12 @@ router.post(
         return next(new AppError(404, "Session not found", true));
       }
 
-      // Validate that session is scheduled
+      // 4. Validate that session is scheduled
       if (session.status !== "SCHEDULED") {
         next(new AppError(400, "Only scheduled sessions can be started", true));
       }
 
-      // Update session: status=scheduled -> start time=now
+      // 5. Update session: status=scheduled -> start time=now
       const updated = await prisma.session.update({
         where: { id: session.id },
         data: {
@@ -186,7 +182,7 @@ router.post(
         },
       });
 
-      // Return response to client
+      // 6. Return response to client
       return res.status(200).json({
         status: "success",
         data: {
@@ -202,19 +198,19 @@ router.post(
 );
 
 //POST stop session
-router.use(
+router.post(
   "/:id/stop",
   async (req: Request, res: Response, next: NextFunction) => {
-    // Extract user from req
+    // 1. Extract user from req
     const { user } = req as AuthRequest;
 
-    // Validate the user is logged in
+    // 2. Validate the user is logged in
     if (!user) {
       return next(new AppError(401, "Not authenticated", true));
     }
 
     try {
-      // Extract url param
+      // 3. Extract url param
       const { id } = req.params;
 
       const now = new Date();
@@ -223,7 +219,7 @@ router.use(
         return next(new AppError(400, "Session id missing", true));
       }
 
-      // Validate session belongs to user
+      // 4. Validate session belongs to user
       const session = await prisma.session.findFirst({
         where: {
           id: id,
@@ -231,14 +227,14 @@ router.use(
         },
       });
 
-      // Validate session is in progress
+      // 5. Validate session is in progress
       if (session?.status !== "IN_PROGRESS") {
         return next(
           new AppError(400, "Only sessions in progress can be stopped", true)
         );
       }
 
-      // Update session to be completed
+      // 6. Update session to be completed
       const updated = await prisma.session.update({
         where: {
           id: session.id,
@@ -249,7 +245,7 @@ router.use(
         },
       });
 
-      // return response to client
+      // 7. Return response to client
       return res.status(200).json({
         status: "success",
         data: {
@@ -268,4 +264,90 @@ router.use(
   }
 );
 
+//POST start break
+router.post(
+  "/:id/breaks/start",
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Extract user from req
+    const { user } = req as AuthRequest;
+
+    // Validate user is logged in
+    if (!user) {
+      return next(new AppError(401, "Not authenticated", true));
+    }
+
+    try {
+      // Extract the url params
+      const { id } = req.params;
+
+      if (!id) {
+        return next(new AppError(400, "Session id missing", true));
+      }
+      const now = new Date();
+      const { type } = req.body as { type?: string };
+
+      // Fetch session
+      const session = await prisma.session.findFirst({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+      });
+
+      // Validate it exists and is scheduled
+      if (!session) {
+        return next(new AppError(404, "Session not found", true));
+      }
+
+      if (session.status !== "IN_PROGRESS") {
+        return next(
+          new AppError(400, "Can only start break on active sessions", true)
+        );
+      }
+
+      // Fetch break
+      const activeBreak = await prisma.break.findFirst({
+        where: {
+          session_id: session.id,
+          end_time: null,
+        },
+      });
+      // Validate no active break
+      if (!activeBreak) {
+        return next(
+          new AppError(400, "An active break is already in progress", true)
+        );
+      }
+
+      // Check for valid type in req
+      const breakType =
+        type && ["SHORT", "LONG", "CUSTOM"].includes(type) ? type : "CUSTOM";
+
+      // Create break entry
+      const newBreak = await prisma.break.create({
+        data: {
+          session_id: session.id,
+          type: breakType,
+          start_time: now,
+          end_time: null,
+        },
+      });
+
+      // Return response to client
+      return res.status(201).json({
+        status: "success",
+        data: {
+          break: {
+            id: newBreak.id,
+            type: newBreak.type,
+            start_time: newBreak.start_time.toISOString(),
+            end_time: newBreak.end_time,
+          },
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 export default router;
