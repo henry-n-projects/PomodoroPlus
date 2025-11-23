@@ -4,8 +4,8 @@ import type { SessionStatus } from "@prisma/client";
 export interface UserObject {
   id: string;
   auth_user_id: string;
-  avartar: string | null;
   name: string;
+  avatar_url?: string | null;
   timezone: string;
   settings: Prisma.JsonValue;
 }
