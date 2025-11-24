@@ -448,4 +448,99 @@ router.post(
     }
   }
 );
+
+// GET session activity
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+  // Extract user from request
+  const { user } = req as AuthRequest;
+
+  // Validate that user is logged in
+  if (!user) {
+    return next(new AppError(401, "Not authenticated", true));
+  }
+  try {
+    // Extract id from url params
+    const { id } = req.params;
+
+    //Validate that session id exists
+    if (!id) {
+      return next(new AppError(400, "Missing session id", true));
+    }
+
+    // Fetch session, tag, breaks
+    const session = await prisma.session.findFirst({
+      where: {
+        id: id,
+        user_id: user.id,
+      },
+      include: {
+        tag: true,
+        breaks: true,
+      },
+    });
+
+    // Validate that session exists
+    if (!session) {
+      return next(new AppError(404, "Cannot find session", true));
+    }
+
+    const now = new Date();
+    const effectiveEnd = session.end_at ?? now;
+
+    // Total break time: start from 0 loop and add break min
+    const totalBreakMinutes = session.breaks.reduce((sum, brk) => {
+      // Skip unfinished breaks
+      if (!brk.end_time) return sum;
+      // Calculate each break to ms
+      const diffMs = brk.end_time.getTime() - brk.start_time.getTime();
+      // Convert ms to minutes, ensure no negative and add to sum
+      return sum + Math.max(Math.round(diffMs / 1000 / 60), 0);
+    }, 0);
+
+    // Calculate total session duration in min
+    const totalMinutes =
+      (effectiveEnd.getTime() - session.start_at.getTime()) / 1000 / 60;
+
+    // Calculate total minutes on task in min
+    const focusMinutes = Math.max(
+      Math.round(totalMinutes - totalBreakMinutes),
+      0
+    );
+
+    // Return response to client
+    return res.status(200).json({
+      status: "success",
+      data: {
+        session: {
+          id: session.id,
+          name: session.name,
+          status: session.status,
+          start_at: session.start_at.toISOString(),
+          end_at: session.end_at ? session.end_at.toISOString() : null,
+          break_time: session.break_time,
+          tag: {
+            id: session.tag.id,
+            name: session.tag.name,
+            color: session.tag.color,
+          },
+        },
+        activity: {
+          total_minutes: Math.max(Math.round(totalMinutes), 0),
+          focus_minutes: focusMinutes,
+          break_minutes: totalBreakMinutes,
+          breaks: session.breaks
+            .sort((a, b) => a.start_time.getTime() - b.start_time.getTime())
+            .map((b) => ({
+              id: b.id,
+              type: b.type,
+              start_time: b.start_time.toISOString(),
+              end_time: b.end_time ? b.end_time.toISOString() : null,
+            })),
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;
