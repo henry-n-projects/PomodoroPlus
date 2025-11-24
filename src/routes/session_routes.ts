@@ -9,7 +9,6 @@ import { AppError } from "../utils/AppError.js";
 import type { CreateSessionBody, UserObject } from "../types/api.js";
 import { SessionStatus, type Session } from "@prisma/client";
 import { error } from "console";
-import { appendFile } from "fs";
 
 const router = Router();
 
@@ -342,6 +341,105 @@ router.post(
             type: newBreak.type,
             start_time: newBreak.start_time.toISOString(),
             end_time: newBreak.end_time,
+          },
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  "/:id/breaks/:breakId/end",
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Extract user from req
+    const { user } = req as AuthRequest;
+
+    // Validate that user is logged in
+    if (!user) {
+      return next(new AppError(401, "Not authenticated", true));
+    }
+
+    try {
+      // Extract session id from url params
+      const { id, breakId } = req.params;
+      if (!id) {
+        return next(new AppError(400, "Session id missing", true));
+      }
+
+      if (!breakId) {
+        return next(new AppError(400, "Break id missing", true));
+      }
+
+      const { type } = req.body as { type?: string }; // e.g. "SHORT" | "LONG" | "CUSTOM"
+
+      const now = new Date();
+
+      // Fetch session from db validate session exists
+      const session = await prisma.session.findFirst({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+      });
+
+      if (!session) {
+        return next(new AppError(404, "Cannot find session.", true));
+      }
+
+      //Fetch break and validate if it exists
+      const brk = await prisma.break.findFirst({
+        where: {
+          id: breakId,
+          session_id: id,
+        },
+      });
+
+      if (!brk) {
+        return next(new AppError(404, "Cannot find break.", true));
+      }
+
+      // Validate break has not ended
+      if (brk.end_time) {
+        return next(new AppError(400, "This break has already ended.", true));
+      }
+
+      // Update break time
+      const updatedBreak = await prisma.break.update({
+        where: { id: brk.id },
+        data: {
+          end_time: now,
+        },
+      });
+
+      // Calculate total break time in minutes
+      const diffMs =
+        (updatedBreak.end_time?.getTime() ?? 0) -
+        updatedBreak.start_time.getTime();
+      // Convert to minutes
+      const diffMin = Math.max(Math.round(diffMs / 1000 / 60), 0);
+
+      // Add to session's total break_time (ensure non-null)
+      const newBreakTime = (session.break_time ?? 0) + diffMin;
+
+      const updatedSession = await prisma.session.update({
+        where: { id: session.id },
+        data: { break_time: newBreakTime },
+      });
+
+      return res.status(200).json({
+        status: "success",
+        data: {
+          break: {
+            id: updatedBreak.id,
+            start_time: updatedBreak.start_time.toISOString(),
+            end_time: updatedBreak.end_time?.toISOString() ?? null,
+            duration_minutes: diffMin,
+          },
+          session: {
+            id: session.id,
+            break_time: newBreakTime,
           },
         },
       });
