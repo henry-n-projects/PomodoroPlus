@@ -2,17 +2,12 @@ import { Router } from "express";
 import prisma from "../libs/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
+import type { UserObject } from "../types/api.js";
 const router = Router();
 
 // Extend request to expect a user object and its properties
 interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    name: string;
-    avatar_url: string | null;
-    timezone: string;
-    settings: any;
-  };
+  user?: UserObject;
 }
 
 // Todays sessions date ranges

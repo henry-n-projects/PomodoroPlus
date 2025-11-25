@@ -1,4 +1,4 @@
-#Pomodoro API contact
+#Pomodoro API contract
 
 Base URL: `http://localhost:3000`
 

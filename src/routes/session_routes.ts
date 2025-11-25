@@ -6,71 +6,14 @@ import {
   type Request,
 } from "express";
 import { AppError } from "../utils/AppError.js";
-import type { CreateSessionBody, UserObject } from "../types/api.js";
-import { SessionStatus, type Session } from "@prisma/client";
-import { error } from "console";
+import type { UserObject } from "../types/api.js";
+import { SessionStatus } from "@prisma/client";
 
 const router = Router();
 
 interface AuthRequest extends Request {
   user?: UserObject;
 }
-
-//  CREATE SESSION
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-  // 1. Cast request to add a user object
-  const user = (req as AuthRequest).user;
-
-  try {
-    if (!user) {
-      return next(new AppError(401, "Not authenticated", true));
-    }
-
-    // 2. Ensure type on request body
-    const body = req.body as CreateSessionBody;
-
-    // 3. Validate response from client
-    if (!body.end_at || !body.start_at || !body.tag_id || !body.name) {
-      return res.status(400).json({
-        status: "error",
-        message: "start_at, end_at or tag_id missing.",
-      });
-    }
-
-    // Turns valid date strings into numbers
-    const startAt = new Date(body.start_at);
-    const endAt = new Date(body.end_at);
-
-    // Check if time strings are actual numbers
-    if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
-      return res.status(400).json({
-        status: "error",
-        message: "start_at or end_at invalid date.",
-      });
-    }
-
-    // 4. Create session into sessions table
-    const created = await prisma.session.create({
-      data: {
-        user_id: user.id,
-        name: body.name ?? "",
-        start_at: startAt,
-        end_at: endAt ?? null,
-        break_time: body.break_time,
-        status: body.status as SessionStatus,
-        created_at: new Date(),
-        tag_id: body.tag_id,
-      },
-    });
-
-    return res.status(201).json({
-      status: "success",
-      data: created,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
 
 //GET scheduled sessions to start from
 router.get(

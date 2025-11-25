@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import type { SessionStatus } from "@prisma/client";
 
 export interface UserObject {
   id: string;
@@ -10,31 +9,16 @@ export interface UserObject {
   settings: Prisma.JsonValue;
 }
 
-export interface CreateSessionBody {
-  name: string;
+// Client response bodys
+export interface CreateUpcomingBody {
+  name?: string;
   start_at: string;
-  end_at: string;
-  break_time: number;
-  status: SessionStatus;
   tag_id: string;
 }
 
-export interface SessionObject {
-  id: string;
-  user_id: string;
-  name: string | null;
-  start_at: string;
-  end_at: string;
-  break_time: number;
-  status: SessionStatus;
-  created_at: string;
-  tag_id: string;
-}
-
-export interface TagObject {
-  id: string;
-  name: string;
-  created_at: Date;
-  user_id: string;
-  color: string;
+export interface UpdateUpcomingBody {
+  name?: string;
+  start_at?: string;
+  end_at?: string;
+  tag_id?: string;
 }
