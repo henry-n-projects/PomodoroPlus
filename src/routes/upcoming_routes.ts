@@ -113,6 +113,13 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const startAt = new Date(body.start_at);
     const endAt = body.end_at ? new Date(now) : null;
 
+    if (startAt < now) {
+      return res.status(400).json({
+        status: "error",
+        message: "start_at must be a future date",
+      });
+    }
+
     // Validate date is in correct format
     if (isNaN(startAt.getTime()) || (endAt && isNaN(endAt.getTime()))) {
       return res.status(400).json({
