@@ -13,7 +13,10 @@ export interface UserObject {
 export interface CreateUpcomingBody {
   name?: string;
   start_at: string;
-  tag_id: string;
+  end_at?: string | null;
+  tag_id?: string;
+  new_tag_name?: string;
+  new_tag_color?: string;
 }
 
 export interface UpdateUpcomingBody {
