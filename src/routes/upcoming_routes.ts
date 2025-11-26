@@ -5,6 +5,8 @@ import type { UserObject } from "../types/api.js";
 import type { CreateUpcomingBody, UpdateUpcomingBody } from "../types/api.js";
 import { AppError } from "../utils/AppError.js";
 import { SessionStatus } from "@prisma/client";
+import app from "../app.js";
+import { start } from "repl";
 const prisma = PrismaClient();
 const router = Router();
 
@@ -189,3 +191,146 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
+
+//PATCH edit scheduled sessions only
+
+router.patch(
+  "/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    //Extract user from request
+    const { user } = req as AuthRequest;
+
+    //Verify that user exists/ logged in
+    if (!user) {
+      return next(new AppError(401, "Not authenticated", true));
+    }
+
+    try {
+      // Extract id from url params
+      const { id } = req.params;
+
+      // Verify that id was provided
+      if (!id) {
+        return next(new AppError(400, "Session id missing request", true));
+      }
+
+      // Fetch and verify session exists to edit
+      const session = prisma.session.findFirst({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+      });
+
+      if (!session) {
+        return next(new AppError(404, "Cannot find session", true));
+      }
+
+      // check is session status is scheduled
+      if (session.status !== "SCHEDULED") {
+        return next(
+          new AppError(400, "Only scheduled sessions can be edited", true)
+        );
+      }
+
+      // Define dynamic object for partial updates
+      const data: Partial<{
+        name: string | null;
+        start_at: Date;
+        tag_id: string;
+      }> = {};
+
+      // Extract the payload from client
+      const body = req.body as UpdateUpcomingBody;
+
+      // Check if name is provided and update
+      if (body.name !== undefined) {
+        data.name = body.name;
+      }
+
+      // Check if start at is provided and update
+      if (body.start_at !== undefined) {
+        const startAt = new Date(body.start_at);
+
+        //Check date format
+        if (isNaN(startAt.getTime())) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid date format for start_at",
+          });
+        }
+        // Must be in the future
+        const now = new Date();
+        if (startAt.getTime() <= now.getTime()) {
+          return res.status(400).json({
+            status: "error",
+            message: "start_at must be a future date",
+          });
+        }
+        data.start_at = startAt;
+      }
+
+      // End at is not to be edited and should be default to null
+      if (body.end_at !== undefined) {
+        return res.status(400).json({
+          status: "error",
+          message: "end_time cannot be edited for upcoming sessions",
+        });
+      }
+
+      // --- Update tag ---
+      if (body.tag_id !== undefined) {
+        // Validate tag belongs to user
+        const tag = await prisma.tag.findFirst({
+          where: {
+            id: body.tag_id,
+            user_id: user.id,
+          },
+        });
+
+        if (!tag) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid tag_id for this user",
+          });
+        }
+
+        data.tag_id = body.tag_id;
+      }
+
+      const updated = prisma.session.update({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+        data: data,
+        include: {
+          tag: true,
+        },
+      });
+
+      //Return response
+
+      return res.status(200).json({
+        status: "success",
+        data: {
+          session: {
+            id: updated.id,
+            name: updated.name,
+            start_at: updated.start_at.toISOString(),
+            end_at: updated.end_at ? updated.end_at.toISOString() : null,
+            status: updated.status,
+            break_time: updated.break_time,
+            tag: {
+              id: updated.tag.id,
+              name: updated.tag.name,
+              color: updated.tag.color,
+            },
+          },
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
