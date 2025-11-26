@@ -245,7 +245,7 @@ router.patch(
 
       // Check if name is provided and update
       if (body.name !== undefined) {
-        data.name = body.name;
+        data.name = body.name ?? null;
       }
 
       // Check if start at is provided and update
