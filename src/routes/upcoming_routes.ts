@@ -334,3 +334,62 @@ router.patch(
     }
   }
 );
+
+router.delete(
+  "/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Extract user from req
+    const { user } = req as AuthRequest;
+
+    // Validate that user is logged in / exists
+    if (!user) {
+      return next(new AppError(401, "Not authenticated", true));
+    }
+
+    try {
+      // Extract id from route params
+      const { id } = req.params;
+
+      // Validate session id exists
+      if (!id) {
+        return next(
+          new AppError(404, "Session id not found in url param", true)
+        );
+      }
+
+      // Find session from db
+      const session = prisma.session.findFirst({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+      });
+
+      // Validate session exists
+      if (!session) {
+        return next(new AppError(404, "Session id not found", true));
+      }
+
+      // Validate that session is scheduled
+      if (session.status !== "SCHEDULED") {
+        return next(
+          new AppError(400, " Only scheduled sessions can be deleted", true)
+        );
+      }
+
+      // Delete session from db
+      const deletedSession = prisma.session.delete({
+        where: {
+          id: session.id,
+        },
+      });
+
+      // return response
+      return res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+export default router;
