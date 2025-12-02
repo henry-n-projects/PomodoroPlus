@@ -3,6 +3,7 @@ import authRoutes from "./auth_routes.js";
 import sessionRoutes from "./session_routes.js";
 import dashboardRoutes from "./dashboard_routes.js";
 import upcomingRouter from "./upcoming_routes.js";
+import analyticsRouter from "./analytics_routes.js";
 const router = Router();
 
 router.get("/health", (req: Request, res: Response) => {
@@ -13,4 +14,5 @@ router.use("/auth", authRoutes);
 router.use("/sessions", sessionRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/upcoming", upcomingRouter);
+router.use("/analytics"), analyticsRouter;
 export default router;
