@@ -14,8 +14,11 @@ const router = Router();
 interface AuthRequest extends Request {
   user?: UserObject;
 }
-
-//GET scheduled sessions to start from
+/**
+ * GET API/SESSION/SCEDULED
+ *
+ * getscheduled sessions to start from
+ */
 router.get(
   "/scheduled",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -74,7 +77,11 @@ router.get(
   }
 );
 
-// POST start session: scheduled -> in progress, set start time
+/**
+ * POST API/SESSION/:ID/START
+ *
+ * start session: scheduled -> in progress, set start time
+ * */
 router.post(
   "/:id/start",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -139,7 +146,11 @@ router.post(
   }
 );
 
-//POST stop session
+/**
+ * POST 'API/:ID/STOP'
+ *
+ * stop session / record session into db
+ */
 router.post(
   "/:id/stop",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -206,7 +217,13 @@ router.post(
   }
 );
 
-//POST start break
+/**
+ *
+ * POST API/SESSION/:ID/BREAKS/START
+ *
+ * start break, fetch break and record start time, add to session
+ */
+
 router.post(
   "/:id/breaks/start",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -293,6 +310,12 @@ router.post(
   }
 );
 
+/**
+ *
+ * POST /API/SESSION/:ID/BREAKS/:BREAKID/END
+ *
+ * update break_end time for a session
+ */
 router.post(
   "/:id/breaks/:breakId/end",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -391,7 +414,12 @@ router.post(
     }
   }
 );
-
+/**
+ *
+ * GET API/SESSION/:ID
+ *
+ * get session activty such as breaks focus time
+ */
 // GET session activity
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   // Extract user from request

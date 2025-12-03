@@ -11,7 +11,7 @@ interface AuthRequest extends Request {
   user: UserObject;
 }
 
-// Helpers
+// HELPER: validate days to a number
 function getDaysFromQuery(req: Request): number {
   const days = req.query.days;
   const num = typeof days === "string" ? Number(days) : NaN;
@@ -21,6 +21,7 @@ function getDaysFromQuery(req: Request): number {
   return Math.min(num, 90);
 }
 
+// HELPER: get range from, to filter dates
 function getRangeFromDays(days: number) {
   const now = new Date();
 

@@ -10,7 +10,7 @@ interface AuthRequest extends Request {
   user?: UserObject;
 }
 
-// Todays sessions date ranges
+// HELPER: Todays sessions date ranges
 function getDayRange(date: Date) {
   const start = new Date(date);
   start.setHours(0, 0, 0, 0); // start of day
@@ -24,7 +24,7 @@ function getDayRange(date: Date) {
   };
 }
 
-// This week sessions date ranges
+// HELPER: This week sessions date ranges
 function getWeekRange(date: Date) {
   const current = new Date(date);
 
@@ -41,7 +41,11 @@ function getWeekRange(date: Date) {
   end.setDate(start.getDate() + 7);
   return { start, end };
 }
-
+/**
+ * GET 'API/DASHBOARD/'
+ *
+ * Show user info, weekly progress, daily sessions, weekly activity
+ */
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as AuthRequest).user;
   // 0. Authenticate user

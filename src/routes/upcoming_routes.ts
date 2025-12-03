@@ -192,7 +192,6 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 //PATCH edit scheduled sessions only
-
 router.patch(
   "/:id",
   async (req: Request, res: Response, next: NextFunction) => {
