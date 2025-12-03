@@ -5,8 +5,7 @@ import type { UserObject } from "../types/api.js";
 import type { CreateUpcomingBody, UpdateUpcomingBody } from "../types/api.js";
 import { AppError } from "../utils/AppError.js";
 import { SessionStatus } from "@prisma/client";
-import app from "../app.js";
-import { start } from "repl";
+
 const prisma = PrismaClient();
 const router = Router();
 

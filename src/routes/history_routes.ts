@@ -3,8 +3,7 @@ import { Router } from "express";
 import type { UserObject } from "../types/api.js";
 import type { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
-import { error } from "console";
-import { basename } from "path/posix";
+
 const prisma = new PrismaClient();
 const router = Router();
 
