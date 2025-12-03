@@ -3,6 +3,8 @@ import { Router } from "express";
 import type { UserObject } from "../types/api.js";
 import type { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
+import { error } from "console";
+import { basename } from "path/posix";
 const prisma = new PrismaClient();
 const router = Router();
 
@@ -111,6 +113,109 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
           days,
         },
         sessions: list,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET/ /API/HISTORY/:id
+ *
+ * detailed info for a single session
+ */
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+  const { user } = req as AuthRequest;
+
+  if (!user) {
+    return next(new AppError(401, "Not authenticated", true));
+  }
+
+  try {
+    // Extract id from url params
+    const { id } = req.params;
+
+    // Validate id is provided
+    if (!id) {
+      return next(new AppError(400, "Session id not provided", true));
+    }
+
+    // Fetch session from db
+    const session = await prisma.session.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        tag: true,
+        breaks: true,
+      },
+    });
+
+    //validate session exists
+    if (!session) {
+      return next(new AppError(404, "Session not found", true));
+    }
+
+    // calculate total time,
+    if (!session.end_at) {
+      return next(
+        new AppError(
+          400,
+          "Only sessions that are finished can have details viewed",
+          true
+        )
+      );
+    }
+    const totalSessionMinutes =
+      session.end_at.getTime() - session.start_at.getTime() / 1000 / 60;
+
+    // Calculate total breaks
+    const totalBreakMinutes = session.breaks.reduce((sum, b) => {
+      if (!b.end_time) return sum;
+
+      // calculate break time in min
+      const diffMin =
+        (b.end_time.getTime() - b.start_time.getTime()) / 1000 / 60;
+
+      // Add diff min to sum total, ensure lowest value to add is 0
+      return sum + Math.max(diffMin, 0);
+    }, 0);
+    const breakMinutes = totalBreakMinutes || session.break_time;
+    const focusMinutes = Math.max(totalSessionMinutes - breakMinutes, 0);
+    const breaks = session.breaks
+      .sort((a, b) => a.start_time.getTime() - b.start_time.getTime())
+      .map((b) => {
+        ({
+          id: b.id,
+          type: b.type,
+          start_time: b.start_time.toISOString(),
+          end_time: b.end_time?.toISOString(),
+        });
+      });
+
+    return res.status(200).json({
+      status: "success",
+      data: {
+        session: {
+          id: session.id,
+          name: session.name,
+          status: session.status,
+          start_at: session.start_at.toISOString(),
+          end_at: session.end_at.toISOString(),
+          tag: {
+            id: session.tag.id,
+            name: session.tag.name,
+            color: session.tag.color,
+          },
+        },
+        metrics: {
+          total_minutes: totalSessionMinutes,
+          focus_minutes: focusMinutes,
+          break_minutes: breakMinutes,
+          break_count: session.breaks.length,
+        },
+        breaks,
       },
     });
   } catch (err) {
