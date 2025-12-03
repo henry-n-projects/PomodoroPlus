@@ -222,3 +222,79 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
+
+router.delete(
+  "/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Extract user from request
+    const { user } = req as AuthRequest;
+
+    // Validate user is logged in
+    if (!user) {
+      return next(new AppError(401, "Not authenticated", true));
+    }
+
+    try {
+      // Extract id from url params
+      const { id } = req.params;
+
+      // Ensure id exists
+      if (!id) {
+        return next(new AppError(400, "Session Id not provided", true));
+      }
+
+      // Retrieve session from db
+      const session = await prisma.session.findFirst({
+        where: {
+          id: id,
+          user_id: user.id,
+        },
+        include: {
+          breaks: true,
+          distractions: true,
+        },
+      });
+
+      // Validate session exists
+      if (!session) {
+        return next(new AppError(404, "Session not found", true));
+      }
+
+      // Vadiate session is completed
+      if (session.status !== "COMPLETED") {
+        return next(
+          new AppError(
+            400,
+            "Only completed sessions can be deleted from history",
+            true
+          )
+        );
+      }
+
+      // Delete foreign keys so delete doesnt fail
+      await prisma.break.deleteMany({
+        where: {
+          session_id: id,
+        },
+      });
+
+      await prisma.distraction.deleteMany({
+        where: {
+          session_id: id,
+        },
+      });
+
+      await prisma.session.delete({
+        where: {
+          id: id,
+        },
+      });
+
+      return res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+export default router;
